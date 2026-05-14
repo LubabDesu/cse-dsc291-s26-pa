@@ -88,6 +88,7 @@ if __name__ == "__main__":
         # Compute the average execution times over all runs.
         avg_allreduce = sum(allreduce_times) / num_runs
         avg_myallreduce = sum(myallreduce_times) / num_runs
+        allreduce_relative_pct = (avg_myallreduce / avg_allreduce) * 100
 
         # Only rank 0 prints the summary.
         if rank == 0:
@@ -98,6 +99,13 @@ if __name__ == "__main__":
                 print("Some runs produced incorrect results!")
             print("Average MPI.Allreduce time: {:.6f} seconds".format(avg_allreduce))
             print("Average myAllreduce time:   {:.6f} seconds".format(avg_myallreduce))
+            print("myAllreduce / MPI.Allreduce: {:.2f}%".format(allreduce_relative_pct))
+            if allreduce_relative_pct <= 105:
+                print("Bonus threshold: within 105% (+5 pts)")
+            elif allreduce_relative_pct <= 150:
+                print("Bonus threshold: within 150% (+2.5 pts)")
+            else:
+                print("Bonus threshold: above 150%")
     
     elif args.test_case == "allgather":
         """
@@ -229,6 +237,7 @@ if __name__ == "__main__":
         # Compute average times over all runs.
         avg_alltoall = sum(alltoall_times) / num_runs
         avg_myalltoall = sum(myalltoall_times) / num_runs
+        alltoall_relative_pct = (avg_myalltoall / avg_alltoall) * 100
 
         # Only rank 0 prints the summary.
         if rank == 0:
@@ -239,5 +248,12 @@ if __name__ == "__main__":
                 print("Some runs produced incorrect results!")
             print("Average MPI.Alltoall time: {:.6f} seconds".format(avg_alltoall))
             print("Average myAlltoall time:   {:.6f} seconds".format(avg_myalltoall))
+            print("myAlltoall / MPI.Alltoall: {:.2f}%".format(alltoall_relative_pct))
+            if alltoall_relative_pct <= 105:
+                print("Bonus threshold: within 105% (+5 pts)")
+            elif alltoall_relative_pct <= 150:
+                print("Bonus threshold: within 150% (+2.5 pts)")
+            else:
+                print("Bonus threshold: above 150%")
     else:
         print(f"This is rank {rank}.")

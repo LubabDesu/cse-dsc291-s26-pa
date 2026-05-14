@@ -74,6 +74,30 @@ class Communicator(object):
           - For the root process: (n-1) receives and (n-1) sends.
         """
         #TODO: Your code here
+        nprocs = self.comm.Get_size()
+        rank = self.comm.Get_rank()
+        root = 0
+
+        if rank == root : 
+            dest_array[:] = src_array[:]
+            for src_rank in range(1, nprocs) : 
+                tmp = np.empty_like(src_array)
+                self.comm.Recv(tmp, source=src_rank)
+                if op == MPI.MIN : 
+                    np.minimum(dest_array, tmp, out=dest_array)
+                elif op == MPI.SUM : 
+                    dest_array[:] += tmp
+                elif op == MPI.MAX : 
+                    np.maximum(dest_array, tmp, out=dest_array)
+                else:
+                    raise ValueError("Unsupported reduction op")
+            
+            for dst_rank in range(1, nprocs) : 
+                self.comm.Send(dest_array, dest=dst_rank)
+        else :
+            self.comm.Send(src_array, dest=root)
+            self.comm.Recv(dest_array, source=root)
+ 
 
     def myAlltoall(self, src_array, dest_array):
         """
@@ -91,3 +115,28 @@ class Communicator(object):
         The total data transferred is updated for each pairwise exchange.
         """
         #TODO: Your code here
+        nprocs = self.comm.Get_size()
+        rank = self.comm.Get_rank()
+
+        assert src_array.size % nprocs == 0
+        assert dest_array.size % nprocs == 0
+
+        send_count = src_array.size // nprocs
+        recv_count = dest_array.size // nprocs
+        assert send_count == recv_count
+
+        for peer in range(nprocs):
+            send_start = peer * send_count
+            send_end = send_start + send_count
+            recv_start = peer * recv_count
+            recv_end = recv_start + recv_count
+
+            if peer == rank:
+                dest_array[recv_start:recv_end] = src_array[send_start:send_end]
+            else:
+                self.comm.Sendrecv(
+                    src_array[send_start:send_end],
+                    dest=peer,
+                    recvbuf=dest_array[recv_start:recv_end],
+                    source=peer,
+                )

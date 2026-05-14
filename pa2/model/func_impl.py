@@ -59,6 +59,12 @@ def get_info(
         The partitioned output dimension for the FC layer.
     """
     #TODO: Your code here
+    dp_idx = rank // mp_size
+    mp_idx = rank % mp_size
+    mp_comm = comm.Split(color=dp_idx, key=rank)
+    dp_comm = comm.Split(color=mp_idx, key=rank)
+    part_in_dim = in_dim // mp_size if fc_layer == "fc_o" else in_dim
+    part_out_dim = out_dim if fc_layer == "fc_o" else out_dim // mp_size
     return mp_idx, dp_idx, mp_comm, dp_comm, part_in_dim, part_out_dim
 
 def naive_collect_forward_input(
@@ -75,6 +81,12 @@ def naive_collect_forward_input(
       (batch_size, seq_length, part_in_dim * mp_size)
     """
     #TODO: Your code here
+    batch, seq, part_dim = x.shape
+    gathered = np.empty((mp_size, batch, seq, part_dim), dtype=x.dtype)
+    x = np.ascontiguousarray(x)
+    mp_comm.Allgather(x, gathered)
+    gathered = np.transpose(gathered, (1,2,0,3))
+    collected_x = gathered.reshape(batch, seq, mp_size * part_dim)
     return collected_x
 
 
@@ -84,14 +96,20 @@ def naive_collect_forward_output(
     mp_size: int,
 ):
     """
-    Collects the fc_o layer's forward outputs from all model-parallel nodes.
+    Combines the fc_o layer's forward output contributions from all
+    model-parallel nodes.
 
-    Each node holds a piece of the full output with shape:
-      (batch_size, seq_length, part_out_dim)
-    After gathering, the full output should have shape:
-      (batch_size, seq_length, part_out_dim * mp_size)
+    Since fc_o is split along the input dimension, each node computes a
+    same-shaped partial contribution to the full output:
+      (batch_size, seq_length, out_dim)
+    After all-reduce summation, every node should have the full output with
+    the same shape:
+      (batch_size, seq_length, out_dim)
     """
     #TODO: Your code here
+    out = np.ascontiguousarray(out)
+    collected_out = np.empty_like(out)
+    mp_comm.Allreduce(out, collected_out, op=MPI.SUM)
     return collected_out
 
 def naive_collect_backward_output(
@@ -125,6 +143,10 @@ def naive_collect_backward_output(
         (batch_size, seq_length, out_dim // mp_size).
     """
     #TODO: Your code here
+    part_dim = output_grad.shape[2] // mp_size
+    start = mp_group_idx * part_dim
+    end = start + part_dim
+    return output_grad[:, :, start : end]
 
 
 def naive_collect_backward_x(
@@ -160,3 +182,10 @@ def naive_collect_backward_x(
         (batch_size, seq_length, in_dim // mp_size).
     """
     #TODO: Your code here
+    batch, seq, in_dim = grad_x.shape
+    part_dim = in_dim // mp_size
+    reshaped = grad_x.reshape(batch, seq, mp_size, part_dim)
+    send_buffer = np.ascontiguousarray(np.transpose(reshaped, (2,0,1,3)))
+    output = np.empty((batch, seq, part_dim), dtype=grad_x.dtype)
+    mp_comm.Reduce_scatter_block(send_buffer, output, op=MPI.SUM)
+    return output

@@ -41,5 +41,10 @@ def split_data(
         - The data length is guaranteed to be divisible by dp_size.
         - Do not shuffle the data indices as shuffling will be done later.
     """
-
-    #TODO: Your code here
+    dp_idx = rank // mp_size
+    samples_per_dp = x_train.shape[0] // dp_size
+    start = dp_idx * samples_per_dp
+    end = start + samples_per_dp
+    allocated_x = x_train[start : end, :]
+    allocated_y = y_train[start : end]
+    return allocated_x, allocated_y

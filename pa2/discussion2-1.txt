@@ -1,1 +1,5 @@
-Put discussion here for 2.1
+myAllreduce (0.000943s vs MPI 0.001247s, 75.58%): 
+Our naive reduce-to-root + broadcast is faster than MPI.Allreduce because the test array is only 100 integers. MPI's optimized algorithms (ring-allreduce, recursive halving) carry higher per-call synchronization overhead that dominates at small data sizes.
+
+myAlltoall (0.000732s vs MPI 0.000740s, 98.87%): 
+Our implementation uses point-to-point Sendrecv exchanges for each peer. It is nearly identical in speed because the test array is only 8 elements, so per-call synchronization overhead dominates the small amount of data movement.
