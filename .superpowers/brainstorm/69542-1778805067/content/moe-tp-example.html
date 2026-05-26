@@ -1,0 +1,76 @@
+<h2>MoE TP Forward: Step-by-Step Example</h2>
+<p class="subtitle">Understanding Indices and Gates</p>
+
+<div class="section">
+  <h3>The Scenario</h3>
+  <ul>
+    <li><strong>Batch Size:</strong> 2 Tokens (T1, T2)</li>
+    <li><strong>Top-k:</strong> 2 (Each token goes to 2 experts)</li>
+  </ul>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Indices Matrix (2x2)</div>
+    <div class="mockup-body">
+      <table style="width: 100%; border-collapse: collapse; text-align: center;">
+        <tr style="border-bottom: 1px solid #ddd;">
+          <th></th>
+          <th style="color: #3b82f6;">Slot 0 (k=0)</th>
+          <th style="color: #3b82f6;">Slot 1 (k=1)</th>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <th style="color: #6366f1;">T1 (i=0)</th>
+          <td style="background: #e0e7ff;">Expert 0</td>
+          <td style="background: #e0e7ff;">Expert 3</td>
+        </tr>
+        <tr>
+          <th style="color: #6366f1;">T2 (i=1)</th>
+          <td style="background: #e0e7ff;">Expert 1</td>
+          <td style="background: #e0e7ff;">Expert 2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Gates Matrix (2x2)</div>
+    <div class="mockup-body">
+      <table style="width: 100%; border-collapse: collapse; text-align: center;">
+        <tr style="border-bottom: 1px solid #ddd;">
+          <th></th>
+          <th style="color: #10b981;">Slot 0 (k=0)</th>
+          <th style="color: #10b981;">Slot 1 (k=1)</th>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <th style="color: #6366f1;">T1 (i=0)</th>
+          <td style="background: #dcfce7;">0.7</td>
+          <td style="background: #dcfce7;">0.3</td>
+        </tr>
+        <tr>
+          <th style="color: #6366f1;">T2 (i=1)</th>
+          <td style="background: #dcfce7;">0.6</td>
+          <td style="background: #dcfce7;">0.4</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Correct Loop Structure</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family: monospace; white-space: pre; font-size: 0.85em;">
+for k in range(self.topk):
+    for i in range(batch_size):
+        expert_idx = <span style="color: #3b82f6;">indices[i, k]</span>
+        gate_value = <span style="color: #10b981;">gates[i, k]</span>
+        
+        # Expert takes a 2D array, so slice like x[i : i+1]
+        expert_out = self.experts[expert_idx](x[i : i+1])
+        
+        # Accumulate: gate * output
+        # expert_out is (1, out_dim), so take [0]
+        outputs[i] += gate_value * expert_out[0]</div>
+  </div>
+</div>

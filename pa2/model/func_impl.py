@@ -182,6 +182,7 @@ def naive_collect_backward_x(
         (batch_size, seq_length, in_dim // mp_size).
     """
     #TODO: Your code here
+<<<<<<< HEAD
     batch, seq, in_dim = grad_x.shape
     part_dim = in_dim // mp_size
     reshaped = grad_x.reshape(batch, seq, mp_size, part_dim)
@@ -189,3 +190,5 @@ def naive_collect_backward_x(
     output = np.empty((batch, seq, part_dim), dtype=grad_x.dtype)
     mp_comm.Reduce_scatter_block(send_buffer, output, op=MPI.SUM)
     return output
+=======
+>>>>>>> c8d2ca315d6e46a5092ac3500769f66e27414a46

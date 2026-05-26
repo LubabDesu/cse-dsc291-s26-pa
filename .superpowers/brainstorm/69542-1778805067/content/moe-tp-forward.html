@@ -1,0 +1,35 @@
+<h2>MoE TP Forward Pass Design</h2>
+<p class="subtitle">Replicated Routing with Distributed Experts</p>
+
+<div class="section">
+  <h3>The Algorithm</h3>
+  <ol>
+    <li><strong>Replicated Routing:</strong> Every rank runs <code>self.router(x)</code>. Since weights are identical and input is replicated, every rank gets the same <code>indices</code> and <code>gates</code>.</li>
+    <li><strong>Expert Computation:</strong> For each top-k slot:
+      <ul>
+        <li>Identify which expert is needed for each token.</li>
+        <li>Pass tokens through <code>self.experts[idx]</code>.</li>
+        <li><em>Crucial:</em> <code>ShardedExpert</code> (via <code>ShardedLinear</code>) will handle the MPI communication to ensure every rank gets the <strong>full</strong> output of that expert.</li>
+      </ul>
+    </li>
+    <li><strong>Gated Accumulation:</strong> Multiply expert outputs by their corresponding <code>gates</code> and sum them into the final <code>outputs</code> array.</li>
+  </ol>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">TP Forward Flow (Per Rank)</div>
+  <div class="mockup-body" style="font-family: monospace; font-size: 0.9em;">
+    Input X (Full) &rarr; [Router] &rarr; Indices/Gates (Full)<br>
+    <br>
+    Loop k in top-k:<br>
+    &nbsp;&nbsp;Loop i in batch:<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;e = Indices[i, k]<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;out = Experts[e](X[i]) <span style="color: #10b981;">&larr; Collective happens inside here!</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Outputs[i] += Gates[i, k] * out
+  </div>
+</div>
+
+<div class="section">
+  <h3>Implementation Note</h3>
+  <p>While the loop-based approach (token-by-token) is easy to write, in a real system we'd group tokens assigned to the same expert to use faster matrix-matrix multiplications. For this assignment, the loop-based approach is perfectly fine to start!</p>
+</div>

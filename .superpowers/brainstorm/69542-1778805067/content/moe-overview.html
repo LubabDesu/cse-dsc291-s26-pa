@@ -1,0 +1,71 @@
+<h2>PA3 Part 1: Mixture-of-Experts (MoE)</h2>
+<p class="subtitle">Implementing Distributed MoE with Tensor and Expert Parallelism</p>
+
+<div class="section">
+  <h3>1. Tensor Parallel (TP) - Starting Point</h3>
+  <p>In TP, every rank holds a vertical shard (slice) of every expert's weights. The computation is split across ranks, and results are combined using collectives.</p>
+  
+  <div class="mockup">
+    <div class="mockup-header">Tensor Parallel (TP) Visualization</div>
+    <div class="mockup-body">
+      <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+        <div style="border: 2px solid #3b82f6; padding: 10px; border-radius: 8px; text-align: center; width: 120px;">
+          <strong>Rank 0</strong><br>
+          <div style="background: #dbeafe; padding: 5px; margin-top: 5px; font-size: 0.8em;">Linear Shard A</div>
+        </div>
+        <div style="font-size: 2em;">+</div>
+        <div style="border: 2px solid #3b82f6; padding: 10px; border-radius: 8px; text-align: center; width: 120px;">
+          <strong>Rank 1</strong><br>
+          <div style="background: #dbeafe; padding: 5px; margin-top: 5px; font-size: 0.8em;">Linear Shard B</div>
+        </div>
+        <div style="font-size: 2em;">&rarr;</div>
+        <div style="border: 2px solid #10b981; padding: 10px; border-radius: 8px; text-align: center; width: 120px;">
+          <strong>Allreduce / Allgather</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Your First Tasks</h3>
+  <div class="options">
+    <div class="option" data-choice="sharded-linear" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>ShardedLinear Forward Pass</h3>
+        <p>Implement the <code>Allreduce</code> or <code>Allgather</code> logic to reassemble the full output from column shards.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="moe-tp" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>MoE_TP Forward Pass</h3>
+        <p>Orchestrate the routed tokens through the sharded experts and combine gated outputs.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="moe-ep" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>Expert Parallel (EP)</h3>
+        <p>Implement <code>Alltoall</code> to route tokens to the ranks owning the full experts.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>TP Advantages</h4>
+    <ul>
+      <li>Simpler routing (replicated)</li>
+      <li>Good for large layers</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>TP Disadvantages</h4>
+    <ul>
+      <li>High communication volume for collectives</li>
+    </ul>
+  </div>
+</div>
