@@ -4,4 +4,4 @@ __pycache__/
 */.gemini/
 *.tar
 *.pt
-.testing_venv/
+.testing_venv/pa3/.env
