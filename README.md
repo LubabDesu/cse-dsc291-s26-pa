@@ -1,19 +1,28 @@
 # CSE 291 / DSC 291: Machine Learning Systems
 
-This repository contains programming assignments for `CSE 291 / DSC 291` in `Spring 2026`.
+Coursework from UC San Diego's ML Systems course (Spring 2026). The theme across all three assignments is building the pieces underneath a deep learning framework by hand instead of leaning on PyTorch's built-ins: no `loss.backward()`, no `torch.distributed`, no library MoE routing. Just the primitives.
 
-Current contents:
+## PA1: Autograd Engine
 
-- [`pa1/CSE291-S26-PA1.ipynb`](pa1/CSE291-S26-PA1.ipynb): PA1 notebook and assignment writeup
-- [`pa1/auto_diff.py`](pa1/auto_diff.py): autodiff implementation scaffold
-- [`pa1/transformer.py`](pa1/transformer.py): transformer training and generation code
-- [`pa1/tests`](pa1/tests): public tests
-- [`pa2/README.md`](pa2/README.md): PA2 assignment writeup (Triton matmul kernel + MPI tensor parallel)
-- [`pa2/student_kernel.py`](pa2/student_kernel.py): Triton kernel scaffold (Part 1)
-- [`pa2/mpi_wrapper`](pa2/mpi_wrapper): `comm.py` scaffold for `myAllreduce` / `myAlltoall` (Part 2)
-- [`pa2/model`](pa2/model), [`pa2/data`](pa2/data): tensor/data parallel scaffolds (Part 2)
-- [`pa2/tests`](pa2/tests): public tests
-- [`pa3/README.md`](pa3/README.md): PA3 assignment writeup (MoE TP/EP, scaling-law cost analysis, speculative decoding, AI-future essay)
-- [`pa3/part1`](pa3/part1): MoE scaffolds (`moe.py`, `mpi_wrapper/`, `benchmark.py`)
-- [`pa3/part2`](pa3/part2): cost analysis scaffolds (`model_training_cost_analysis.py`, Llama-3 8B and DeepSeek-V3 configs)
-- [`pa3/part3`](pa3/part3): speculative decoding notebook
+A reverse-mode automatic differentiation engine built from scratch (`pa1/auto_diff.py`), roughly 20 ops deep: `MatMul`, `Softmax`, `LayerNorm`, `ReLU`, `Sqrt`, `Power`, broadcasting, transpose, and the elementwise arithmetic, each with a hand-derived forward and backward pass wired into a computation graph (`Node`, `Op`, `Evaluator`). The engine trains a full transformer (`pa1/transformer.py`) end to end, gradients included, without ever touching PyTorch's autograd.
+
+## PA2: GPU Kernels + Distributed Communication
+
+Two parts, both close to the metal:
+
+- A fused Triton kernel (`pa2/student_kernel.py`) computing `D = ReLU(A @ B + C)` in fp16 with fp32 accumulation, tuned across tile assignment, shared memory staging, and register-level accumulation, with an autotuning grid search over block configs.
+- MPI collective primitives implemented by hand (`pa2/mpi_wrapper/comm.py`): `myAllreduce` and `myAlltoall`, plus the data-parallel data splitting and naive model-parallel forward/backward communication built on top of them (`pa2/model`, `pa2/data`).
+
+## PA3: MoE, Scaling Laws, Speculative Decoding
+
+- Mixture-of-Experts implemented two ways (`pa3/part1/moe.py`): tensor-parallel (`MoE_TP`) and expert-parallel (`MoE_EP`), benchmarked against each other.
+- Training cost analysis under scaling laws (`pa3/part2`): deriving Llama-3 8B's exact parameter count from its config, then picking the compute-optimal model size and GPU under a fixed budget, plus a bonus cost breakdown for DeepSeek-V3's MoE architecture.
+- Speculative decoding implemented and benchmarked (`pa3/part3`), with a bonus tree/multi-branch speculation variant.
+
+## Stack
+
+Python, PyTorch (tensors only, autograd disabled), Triton, MPI (`mpi4py`), NumPy.
+
+---
+
+Originally coursework for CSE 291 / DSC 291 (UCSD, Spring 2026), forked here to track my own submissions.
