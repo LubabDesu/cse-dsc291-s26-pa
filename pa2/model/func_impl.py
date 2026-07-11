@@ -58,7 +58,6 @@ def get_info(
     part_out_dim : int
         The partitioned output dimension for the FC layer.
     """
-    #TODO: Your code here
     dp_idx = rank // mp_size
     mp_idx = rank % mp_size
     mp_comm = comm.Split(color=dp_idx, key=rank)
@@ -80,7 +79,6 @@ def naive_collect_forward_input(
     After gathering, the full input should have shape:
       (batch_size, seq_length, part_in_dim * mp_size)
     """
-    #TODO: Your code here
     batch, seq, part_dim = x.shape
     gathered = np.empty((mp_size, batch, seq, part_dim), dtype=x.dtype)
     x = np.ascontiguousarray(x)
@@ -106,7 +104,6 @@ def naive_collect_forward_output(
     the same shape:
       (batch_size, seq_length, out_dim)
     """
-    #TODO: Your code here
     out = np.ascontiguousarray(out)
     collected_out = np.empty_like(out)
     mp_comm.Allreduce(out, collected_out, op=MPI.SUM)
@@ -142,7 +139,6 @@ def naive_collect_backward_output(
         The local output gradient for this MP node with shape 
         (batch_size, seq_length, out_dim // mp_size).
     """
-    #TODO: Your code here
     part_dim = output_grad.shape[2] // mp_size
     start = mp_group_idx * part_dim
     end = start + part_dim
@@ -181,8 +177,6 @@ def naive_collect_backward_x(
         The reduced and scattered grad_x with shape 
         (batch_size, seq_length, in_dim // mp_size).
     """
-    #TODO: Your code here
-<<<<<<< HEAD
     batch, seq, in_dim = grad_x.shape
     part_dim = in_dim // mp_size
     reshaped = grad_x.reshape(batch, seq, mp_size, part_dim)
@@ -190,5 +184,3 @@ def naive_collect_backward_x(
     output = np.empty((batch, seq, part_dim), dtype=grad_x.dtype)
     mp_comm.Reduce_scatter_block(send_buffer, output, op=MPI.SUM)
     return output
-=======
->>>>>>> c8d2ca315d6e46a5092ac3500769f66e27414a46

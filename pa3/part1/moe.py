@@ -124,9 +124,6 @@ class ShardedLinear:
 
         result = np.zeros((x.shape[0], self.out_features_global), dtype=np.float32)
 
-        # TODO (Part 1.1): compute this rank's partial output and use a
-        # collective so every rank ends up with the full
-        # (batch_size, out_features) result.
         local_out = np.dot(x, self.weight) + self.bias
         start = self.output_offset
         end = start + self.local_out_features
@@ -190,10 +187,6 @@ class MoE_TP:
         batch_size = x.shape[0]
         outputs = np.zeros((batch_size, self.output_dim))
 
-        # TODO (Part 1.1): implement the TP-style forward pass.
-        # 1. Get routing indices and gates from self.router(x, self.topk).
-        # 2. Run each routed token through its assigned expert and
-        #    gate-combine the results into `outputs`.
         indices, gates = self.router(x, self.topk)
         for i in range(self.topk):
             for tok in range(batch_size):
@@ -255,11 +248,6 @@ class MoE_EP:
         batch_size = x.shape[0]
         outputs = np.zeros((batch_size, self.output_dim))
 
-        # TODO (Part 1.2): implement the EP-style forward pass.
-        # 1. Get routing indices and gates from self.router(x, self.topk).
-        # 2. Send each token to the rank that owns its assigned expert.
-        # 3. Run this rank's local expert on the tokens it received.
-        # 4. Send the results back and gate-combine into `outputs`.
         indices, gates = self.router(x, self.topk)
         for k in range(self.topk):
             send_buckets = [[] for _ in range(self.world_size)]

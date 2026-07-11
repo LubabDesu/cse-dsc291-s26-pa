@@ -191,7 +191,6 @@ def causal_self_attention(
     - Use ad.softmax(node, dim=-1).
     - Divide by sqrt(model_dim) using the / operator (divides by a constant).
     """
-    """TODO: Your code here"""
     Q = ad.matmul(X, W_Q)                                                                                                                 
     K = ad.matmul(X, W_K)
     V = ad.matmul(X, W_V)                                                                                                                   
@@ -257,8 +256,6 @@ def decoder_layer(
     - Use ad.matmul for matrix multiplication.
     - The + operator on nodes performs element-wise addition (residual connection).
     """
-    """TODO: Your code here"""
-
     attn_out = causal_self_attention(X, W_Q, W_K, W_V, W_O, mask, model_dim)
     h = ad.layernorm(X + attn_out, normalized_shape=[model_dim], eps=eps)
     ff_out = ad.matmul(ad.relu(ad.matmul(h, W_ff1)), W_ff2)
@@ -320,7 +317,6 @@ def transformer_lm(
     3. h = decoder_layer(h, W_Q, ..., mask, model_dim, ff_dim, eps)
     4. logits = h @ W_head                   → (batch, seq_len, vocab_size)
     """
-    """TODO: Your code here"""
     token_embeddings = ad.matmul(X_onehot, W_embed)
     h = token_embeddings + pos_embed
     h = decoder_layer(h, W_Q, W_K, W_V, W_O, W_ff1, W_ff2, mask, model_dim, ff_dim, eps)
@@ -368,7 +364,6 @@ def cross_entropy_loss(
     You do NOT need to implement a numerically stable version (log-sum-exp trick).
     The simple softmax → log approach is fine for this assignment.
     """
-    """TODO: Your code here"""
     probs = ad.softmax(logits, dim=-1)
     log_probs = ad.log(ad.add_by_const(probs, 1e-10))
     loss = -1 * (ad.sum_op(targets_onehot * log_probs, dim=(0,1,2), keepdim=True)) / num_tokens
@@ -430,7 +425,6 @@ def sgd_epoch(
     loss_val = result[1]
     grads = result[2:]  # one gradient per weight, in the same order as model_weights
 
-    # --- TODO: Update weights (your code here) ---
     # grads[i] corresponds to model_weights[i].
     # Each gradient has an extra leading batch dimension (dim 0).
     # You must sum over dim 0 before subtracting:
@@ -508,7 +502,6 @@ def generate(
         })
         return result[0]
 
-    # --- TODO: Generation loop (your code here) ---
     # 1. Encode the prompt into token indices using encode().
     # 2. Loop up to max_new_tokens times:
     #    a. Call run_forward(tokens) to get logits (1, SEQ_LEN, VOCAB_SIZE).

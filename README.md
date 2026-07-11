@@ -1,28 +1,29 @@
-# CSE 291 / DSC 291: Machine Learning Systems
+# Machine Learning Systems from Scratch
 
-Coursework from UC San Diego's ML Systems course (Spring 2026). The theme across all three assignments is building the pieces underneath a deep learning framework by hand instead of leaning on PyTorch's built-ins: no `loss.backward()`, no `torch.distributed`, no library MoE routing. Just the primitives.
+Coursework and implementations from UC San Diego's CSE 291 / DSC 291 Machine Learning Systems course, Spring 2026. The repository explores the systems underneath modern deep-learning frameworks, including automatic differentiation, GPU kernels, distributed communication, Mixture-of-Experts parallelism, model-scaling analysis, and inference.
 
-## PA1: Autograd Engine
+*Note: This repository contains coursework implementations and assignment scaffolding.*
 
-A reverse-mode automatic differentiation engine built from scratch (`pa1/auto_diff.py`), roughly 20 ops deep: `MatMul`, `Softmax`, `LayerNorm`, `ReLU`, `Sqrt`, `Power`, broadcasting, transpose, and the elementwise arithmetic, each with a hand-derived forward and backward pass wired into a computation graph (`Node`, `Op`, `Evaluator`). The engine trains a full transformer (`pa1/transformer.py`) end to end, gradients included, without ever touching PyTorch's autograd.
+## [PA1: Autodiff Engine and Transformer](./pa1)
+- Built a reverse-mode automatic-differentiation engine supporting 20+ operations (including matrix multiplication, softmax, LayerNorm, ReLU, broadcasting, transpose, and elementwise arithmetic) by implementing the forward and backward passes of these operations on top of a provided graph scaffolding.
+- Constructed the backward computational graph and static evaluator.
+- Trained a small decoder-only Transformer end-to-end without calling PyTorch autograd, with gradients validated against PyTorch within test tolerances.
 
-## PA2: GPU Kernels + Distributed Communication
+## [PA2: Triton Kernels and Distributed Communication](./pa2)
+- Implemented a fused Triton kernel computing `ReLU(A @ B + C)` with FP32 accumulation.
+- Achieved a verified 1.1033x speedup over the PyTorch reference on an NVIDIA A10G: 0.3380 ms versus 0.3730 ms.
+- Implemented MPI all-reduce and all-to-all using point-to-point communication.
+- Implemented data-parallel splitting and model-parallel forward/backward communication.
 
-Two parts, both close to the metal:
+## [PA3: Distributed MoE and LLM Systems](./pa3)
+- Implemented and benchmarked tensor-parallel and expert-parallel Mixture-of-Experts prototypes using MPI.
+- Analysed the communication bottlenecks of TP versus EP across batch sizes.
+- Implemented Llama-style parameter, FLOP, and memory analysis where completed.
 
-- A fused Triton kernel (`pa2/student_kernel.py`) computing `D = ReLU(A @ B + C)` in fp16 with fp32 accumulation, tuned across tile assignment, shared memory staging, and register-level accumulation, with an autotuning grid search over block configs.
-- MPI collective primitives implemented by hand (`pa2/mpi_wrapper/comm.py`): `myAllreduce` and `myAlltoall`, plus the data-parallel data splitting and naive model-parallel forward/backward communication built on top of them (`pa2/model`, `pa2/data`).
+## Speculative Decoding
+The speculative-decoding implementation and benchmark notebook is available separately:
 
-## PA3: MoE, Scaling Laws, Speculative Decoding
+[Open the speculative-decoding notebook in Google Colab](https://colab.research.google.com/drive/1ExLTbff6hp_7D530fZ9ht3onNWNwG_rd)
 
-- Mixture-of-Experts implemented two ways (`pa3/part1/moe.py`): tensor-parallel (`MoE_TP`) and expert-parallel (`MoE_EP`), benchmarked against each other.
-- Training cost analysis under scaling laws (`pa3/part2`): deriving Llama-3 8B's exact parameter count from its config, then picking the compute-optimal model size and GPU under a fixed budget, plus a bonus cost breakdown for DeepSeek-V3's MoE architecture.
-- Speculative decoding implemented and benchmarked (`pa3/part3`), with a bonus tree/multi-branch speculation variant.
-
-## Stack
-
-Python, PyTorch (tensors only, autograd disabled), Triton, MPI (`mpi4py`), NumPy.
-
----
-
-Originally coursework for CSE 291 / DSC 291 (UCSD, Spring 2026), forked here to track my own submissions.
+## Technologies
+Python, PyTorch tensors with autograd disabled, Triton, MPI/mpi4py, NumPy.

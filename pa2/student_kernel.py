@@ -35,7 +35,6 @@ def matmul_add_relu_kernel_fp16(
     # Each kernel instance is mapped to a tile in the output matrix C.
     # Compute the starting indices (m_start, n_start) for this tile.
     # -------------------------------------------------------------------------
-    # TODO: Compute the tile indices using program_id(0) for M and program_id(1) for N.
     pid_m = tl.program_id(0)
     pid_n = tl.program_id(1)
 
@@ -46,7 +45,6 @@ def matmul_add_relu_kernel_fp16(
     # -------------------------------------------------------------------------
     # Step 2: Register Tiling
     # -------------------------------------------------------------------------
-    # TODO: Initialize the accumulator "acc" with zeros (dtype: float16 or float32).
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
 
     # -------------------------------------------------------------------------
@@ -55,7 +53,6 @@ def matmul_add_relu_kernel_fp16(
     # the current C tile. The offsets here serve to load BLOCK_M x BLOCK_K
     # and BLOCK_K x BLOCK_N blocks from A and B respectively.
     # -------------------------------------------------------------------------
-    # TODO: Finish code below.
     # for each slice of K : choose current k indicies, load A : rows offs_m and cols offs_k
     # load B : rows offs_k and cols offs_n, then multiply A_tile @ B tile and add into accumulator
     for k in range(0, K, BLOCK_K) : 
@@ -76,7 +73,6 @@ def matmul_add_relu_kernel_fp16(
     # -------------------------------------------------------------------------
     # Step 4: Add C and Apply ReLU to the accumulator
     # -------------------------------------------------------------------------
-    # TODO: Finish code below.
     c_ptrs = c_ptr + offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn
     c = tl.load(c_ptrs,
                 mask=(offs_m[:, None] < M) & (offs_n[None, :] < N), 
@@ -87,7 +83,6 @@ def matmul_add_relu_kernel_fp16(
     # -------------------------------------------------------------------------
     # Step 5: Write Cache / Epilogue Fusion: Write the computed tile to D.
     # -------------------------------------------------------------------------
-    # TODO: Finish code below.
     d_ptrs = d_ptr + offs_m[:, None] * stride_dm + offs_n[None, :] * stride_dn
 
 
