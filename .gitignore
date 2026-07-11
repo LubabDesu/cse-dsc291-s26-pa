@@ -1,7 +1,20 @@
-*.DS_Store*
-*.vscode*
+.DS_Store
+.vscode/
+.gemini/
 __pycache__/
-*/.gemini/
+*.py[cod]
+.pytest_cache/
+.testing_venv/
+.env
+.env.*
+!.env.example
 *.tar
 *.pt
-.testing_venv/pa3/.env
+*.pth
+*.ckpt
+*.tmp
+*.swp
+
+# Local scratch artifacts that are not part of the coursework.
+cse-dsc291-s26-pa/
+package-lock.json

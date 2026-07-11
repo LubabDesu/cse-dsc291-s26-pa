@@ -79,7 +79,6 @@ class Communicator(object):
           - For non-root processes: one send and one receive.
           - For the root process: (n-1) receives and (n-1) sends.
         """
-        #TODO: Your code here
         nprocs = self.comm.Get_size()
         rank = self.comm.Get_rank()
         root = 0
@@ -123,7 +122,6 @@ class Communicator(object):
             
         The total data transferred is updated for each pairwise exchange.
         """
-        #TODO: Your code here
         nprocs = self.comm.Get_size()
         rank = self.comm.Get_rank()
 
